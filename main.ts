@@ -76,11 +76,16 @@ if (import.meta.main) {
   Deno.serve({ port }, async (req: Request): Promise<Response> => {
     const url: URL = new URL(req.url);
 
-    if (url.pathname.startsWith("/broadcast")) {
+    console.log(`Received request: ${req.method} ${url.pathname}`);
+
+    if (!url.pathname.startsWith("/broadcast")) {
       return new Response("Not Found", { status: 404 });
     }
 
     const pods = await fetchPods();
+
+    console.log(`Broadcasting to pods: ${pods.join(", ")}`);
+
     await broadcastRequest(pods, {
       pathname: url.pathname.replace(/^\/broadcast/, ""),
       method: req.method,

@@ -22,12 +22,26 @@ This way, an application can make a single request to clear nginx's cache, which
 * [www.justice.gov.uk](https://www.justice.gov.uk/) (TBC)
 * [intranet.justice.gov.uk](https://intranet.justice.gov.uk/) (TBC)
 
+## Local development
+
+To run the application locally:
+
+`docker build -t app . && docker run -it -p 1993:1993 -e TOKEN=fake-token app`
+
+To make changes to the application locally:
+
+`docker build -t app . && docker run -it -p 1993:1993 -v .:/app --entrypoint=/bin/ash app`
+
+From the container's terminal, you can now run Deno commands:
+
+`deno test --watch`
+
+`deno dev --watch`
+
 ## Security first
 This repository uses Snyk to monitor vulnerabilities that occur in a Docker image. Snyk runs on an automated schedule ensuring we get the latest patched updates regularly.
 
 To modify the schedule you can edit the GitHub Action located in `.github/workflows`.
-
-
 
 <!-- License -->
 

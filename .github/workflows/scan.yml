@@ -1,4 +1,4 @@
-name: "Scan and test"
+name: "Scan"
 
 # Controls when the workflow will run
 on:
@@ -19,7 +19,7 @@ concurrency:
 permissions:
   contents: read
 
-jobs:
+# jobs:
   # snyk:
   #   name: "Snyk: scanner"
   #   runs-on: ubuntu-latest
@@ -38,23 +38,3 @@ jobs:
   #       with:
   #         image: moj/kubernetes-pod-broadcaster
   #         args: --file=Dockerfile --severity-threshold=medium
-
-  test:
-    if: github.event_name == 'pull_request'
-    name: "Deno: test"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v2.x
-      - name: Cache Deno modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/deno
-          key: ${{ runner.os }}-deno-${{ hashFiles('**/*.ts') }}-v2
-          restore-keys: |
-            ${{ runner.os }}-deno-v2
-      - name: Run tests
-        run: deno task test

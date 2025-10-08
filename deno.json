@@ -2,6 +2,7 @@
   "tasks": {
     "dev": "deno run --permission-set=default --watch main.ts",
     "production": "deno run --permission-set=default main.ts",
+    "cluster": "deno run --permission-set=default --cert=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt main.ts",
     "test": "PORT=12345 TOKEN=fake-token CACHE_DURATION_MS=500 deno test --permission-set=default"
 
   },

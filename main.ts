@@ -4,7 +4,7 @@ const port = parseInt(Deno.env.get("PORT") || "1993");
 const cacheDurationMs = parseInt(Deno.env.get("CACHE_DURATION_MS") || "1_000"); // 1 second
 
 const debugTokens = new Set(["true", "1", "yes", "on"]);
-const debugEnabled = "1" //(Deno.env.get("DEBUG") || "")
+const debugEnabled = (Deno.env.get("DEBUG") || "")
   .toLowerCase()
   .split(",")
   .map((token) => token.trim())

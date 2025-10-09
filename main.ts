@@ -148,6 +148,8 @@ export async function broadcastRequest(
           Object.fromEntries(response.headers.entries()),
         );
 
+        debugLog("Response content", await response.text());
+
         return { ip, status: response.status };
       } catch (err) {
         console.error(`Failed to send to ${ip}:`, err);

@@ -12,7 +12,7 @@
   "permissions": {
     "default": {
       "env": [
-        "NAMESPACE","LABEL_SELECTOR","PORT","CACHE_DURATION_MS","KUBE_API","TOKEN_PATH","TOKEN"
+        "DEBUG", "NAMESPACE","LABEL_SELECTOR","PORT","CACHE_DURATION_MS","KUBE_API","TOKEN_PATH","TOKEN"
       ],
       "read": ["/var/run/secrets/kubernetes.io/serviceaccount/token"],
       "net": true

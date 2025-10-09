@@ -5,7 +5,11 @@ const port = parseInt(Deno.env.get("PORT") || "1993");
 
 let fetchCallCount = 0;
 
-let broadcastedRequests: { url: string; method: string }[] = [];
+let broadcastedRequests: {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+}[] = [];
 
 const timeouts: number[] = [];
 
@@ -67,12 +71,12 @@ globalThis.fetch = async (
 
   // Simulate a fetch error for invalid IPs.
   if (url.includes("256.256.256.256")) {
-    broadcastedRequests.push({ url, method: init?.method || "GET" });
-    return new Response("Fetch error", { status: 500 });
+    throw new TypeError("Network unreachable");
   }
 
   if (url.startsWith("http://")) {
-    broadcastedRequests.push({ url, method: init?.method || "GET" });
+    const headers = Object.fromEntries(new Headers(init?.headers).entries());
+    broadcastedRequests.push({ url, method: init?.method || "GET", headers });
 
     return new Response("OK", { status: 200 });
   }
@@ -148,8 +152,8 @@ Deno.test("broadcastRequest sends requests to all pod IPs", async () => {
     port: 8080,
   });
   assertEquals(broadcastedRequests, [
-    { url: "http://10.0.0.1:8080/test", method: "POST" },
-    { url: "http://10.0.0.2:8080/test", method: "POST" },
+    { url: "http://10.0.0.1:8080/test", method: "POST", headers: {} },
+    { url: "http://10.0.0.2:8080/test", method: "POST", headers: {} },
   ]);
   assertEquals(results, [
     { ip: "10.0.0.1", status: 200 },
@@ -189,8 +193,16 @@ Deno.test(
     const text = await response.text();
     assertEquals(text, "Broadcast complete");
     assertEquals(broadcastedRequests, [
-      { url: "http://10.0.0.1:8081/test/page", method: "PUT" },
-      { url: "http://10.0.0.2:8081/test/page", method: "PUT" },
+      {
+        url: "http://10.0.0.1:8081/test/page",
+        method: "PUT",
+        headers: {},
+      },
+      {
+        url: "http://10.0.0.2:8081/test/page",
+        method: "PUT",
+        headers: {},
+      },
     ]);
   },
 );
@@ -214,8 +226,16 @@ Deno.test(
     // Wait a bit to allow async broadcast to complete.
     await new Promise((resolve) => setTimeout(resolve, 100));
     assertEquals(broadcastedRequests, [
-      { url: "http://10.0.0.1:8080/test?example=1", method: "DELETE" },
-      { url: "http://10.0.0.2:8080/test?example=1", method: "DELETE" },
+      {
+        url: "http://10.0.0.1:8080/test?example=1",
+        method: "DELETE",
+        headers: {},
+      },
+      {
+        url: "http://10.0.0.2:8080/test?example=1",
+        method: "DELETE",
+        headers: {},
+      },
     ]);
   },
 );
@@ -237,11 +257,43 @@ Deno.test(
       {
         url: "http://10.0.0.1:8080/purge-cache/",
         method: "GET",
+        headers: {},
       },
       {
         url: "http://10.0.0.2:8080/purge-cache/",
         method: "GET",
+        headers: {},
       },
     ]);
   },
 );
+
+Deno.test("serverHandler forwards allowed headers", async () => {
+  const request = new Request(
+    `http://localhost:${port}/broadcast/test?_wait=true`,
+    {
+      method: "GET",
+      headers: {
+        Host: "upstream.test:1234",
+        "X-Not-Allowed": "should-not-forward",
+      },
+    },
+  );
+
+  const response = await serverHandler(request);
+  assertEquals(response.status, 200);
+  await response.text();
+
+  assertEquals(broadcastedRequests, [
+    {
+      url: "http://10.0.0.1:8080/test",
+      method: "GET",
+      headers: { host: "upstream.test:1234" },
+    },
+    {
+      url: "http://10.0.0.2:8080/test",
+      method: "GET",
+      headers: { host: "upstream.test:1234" },
+    },
+  ]);
+});

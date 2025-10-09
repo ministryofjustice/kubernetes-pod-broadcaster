@@ -4,11 +4,20 @@ const port = parseInt(Deno.env.get("PORT") || "1993");
 const cacheDurationMs = parseInt(Deno.env.get("CACHE_DURATION_MS") || "1_000"); // 1 second
 
 const debugTokens = new Set(["true", "1", "yes", "on"]);
-const debugEnabled = (Deno.env.get("DEBUG") || "")
+const debugEnabled = "1" //(Deno.env.get("DEBUG") || "")
   .toLowerCase()
   .split(",")
   .map((token) => token.trim())
   .some((token) => debugTokens.has(token));
+
+const broadcastHeaderEnv = Deno.env.get("BROADCAST_HEADERS") || "host";
+const broadcastHeaderAllowList = new Set(
+  broadcastHeaderEnv
+    .toLowerCase()
+    .split(",")
+    .map((header) => header.trim())
+    .filter(Boolean),
+);
 
 const kubeApi = "https://kubernetes.default.svc";
 const tokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token";
@@ -67,7 +76,8 @@ export async function fetchPods(): Promise<string[]> {
       (condition: any) => condition?.type === "Ready",
     );
 
-    const isReady = readyCondition?.status === "True" && Boolean(pod?.status?.podIP);
+    const isReady =
+      readyCondition?.status === "True" && Boolean(pod?.status?.podIP);
 
     if (!isReady) {
       debugLog("Skipping pod (not ready or missing IP)", {
@@ -100,11 +110,15 @@ export async function broadcastRequest(
     method: string;
     port: number;
     search?: string;
+    headers?: HeadersInit;
   },
 ): Promise<{ ip: string; status: number | null; error?: string }[]> {
   const podIPs = await podIPsPromise;
 
-  debugLog("Starting broadcast request", { podIPs, options });
+  debugLog("Starting broadcast request", {
+    podIPs,
+    options,
+  });
 
   return Promise.all(
     podIPs.map(async (ip) => {
@@ -116,15 +130,23 @@ export async function broadcastRequest(
           url.search = options.search;
         }
 
-        debugLog("Broadcasting to IP", { ip, url: url.toString(), method: options.method });
+        debugLog("Broadcasting to IP", {
+          ip,
+          url: url.toString(),
+          method: options.method,
+        });
 
         const response = await fetch(url, {
           method: options.method,
+          headers: options.headers,
         });
 
         console.log(`Broadcast to ${url.toString()}: ${response.status}`);
 
-        debugLog("Response headers", Object.fromEntries(response.headers.entries()));
+        debugLog(
+          "Response headers",
+          Object.fromEntries(response.headers.entries()),
+        );
 
         return { ip, status: response.status };
       } catch (err) {
@@ -158,16 +180,26 @@ export const serverHandler = async (req: Request): Promise<Response> => {
     headers: Object.fromEntries(req.headers.entries()),
   });
 
+  const forwardedHeaders = new Headers();
+  for (const [name, value] of req.headers.entries()) {
+    if (broadcastHeaderAllowList.has(name.toLowerCase())) {
+      forwardedHeaders.set(name, value);
+    }
+  }
+
+  debugLog(
+    "Forwarding headers",
+    Object.fromEntries(forwardedHeaders.entries()),
+  );
+
   if (!url.pathname.startsWith("/broadcast")) {
     console.log(`No match for ${url.pathname}`);
     return new Response("Not Found", { status: 404 });
   }
 
-  const {
-    _port,
-    _wait,
-    ...searchObject
-  } = Object.fromEntries(url.searchParams);
+  const { _port, _wait, ...searchObject } = Object.fromEntries(
+    url.searchParams,
+  );
 
   const podsPromise = fetchPods();
 
@@ -176,6 +208,7 @@ export const serverHandler = async (req: Request): Promise<Response> => {
     method: req.method,
     search: new URLSearchParams(searchObject).toString(),
     pathname: url.pathname.replace(/^\/broadcast/, ""),
+    headers: forwardedHeaders,
   });
 
   if (_wait === "true") {

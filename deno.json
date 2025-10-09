@@ -4,7 +4,6 @@
     "production": "deno run --permission-set=default main.ts",
     "cluster": "deno run --permission-set=default --cert=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt main.ts",
     "test": "PORT=12345 TOKEN=fake-token CACHE_DURATION_MS=500 deno test --permission-set=default"
-
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
@@ -12,7 +11,15 @@
   "permissions": {
     "default": {
       "env": [
-        "DEBUG", "NAMESPACE","LABEL_SELECTOR","PORT","CACHE_DURATION_MS","KUBE_API","TOKEN_PATH","TOKEN"
+        "DEBUG",
+        "NAMESPACE",
+        "LABEL_SELECTOR",
+        "PORT",
+        "CACHE_DURATION_MS",
+        "BROADCAST_HEADERS",
+        "KUBE_API",
+        "TOKEN_PATH",
+        "TOKEN"
       ],
       "read": ["/var/run/secrets/kubernetes.io/serviceaccount/token"],
       "net": true

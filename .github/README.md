@@ -2,7 +2,7 @@
 
 # <img alt="MoJ logo" src="https://moj-logos.s3.eu-west-2.amazonaws.com/moj-uk-logo.png" width="200"><br>Kubernetes Pod Broadcaster
 
-[![Builder](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/scan.yml/badge.svg)](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/scan.yml)
+[![Scanner](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/scan.yml/badge.svg)](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/scan.yml)
 <br>
 [![Standards Icon]][Standards Link]
 [![License Icon]][License Link]
@@ -63,6 +63,8 @@ docker push <your-registry>/kubernetes-pod-broadcaster:latest
 ```
 
 Then, create a deployment and service in your cluster. An example manifest is provided in the `examples` directory.
+
+You will need to create a service account, role, and role binding to allow the application to query the Kubernetes API for pods. Example manifests are provided in the `examples` directory. On the MoJ Cloud Platform, these are created with the service account terraform module.
 
 Finally create a service to expose the deployment. An example manifest is provided in the `examples` directory.
 

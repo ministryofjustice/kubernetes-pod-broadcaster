@@ -19,22 +19,22 @@ concurrency:
 permissions:
   contents: read
 
-# jobs:
-  # snyk:
-  #   name: "Snyk: scanner"
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     security-events: write
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Build a Docker image
-  #       run: docker build -t moj/kubernetes-pod-broadcaster .
+jobs:
+  snyk:
+    name: "Snyk: scanner"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build a Docker image
+        run: docker build -t moj/kubernetes-pod-broadcaster .
 
-  #     - name: Run Snyk | Check Docker image for vulnerabilities
-  #       uses: snyk/actions/docker@master
-  #       env:
-  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-  #       with:
-  #         image: moj/kubernetes-pod-broadcaster
-  #         args: --file=Dockerfile --severity-threshold=medium
+      - name: Run Snyk | Check Docker image for vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: moj/kubernetes-pod-broadcaster
+          args: --file=Dockerfile --severity-threshold=medium

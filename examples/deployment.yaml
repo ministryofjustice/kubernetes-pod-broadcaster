@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-broadcaster
+  labels:
+    app: pod-broadcaster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-broadcaster
+  template:
+    metadata:
+      labels:
+        app: pod-broadcaster
+    spec:
+      # Ensure the pod has the correct permissions to list pods.
+      serviceAccountName: pod-broadcaster-serviceaccount
+      containers:
+        - name: pod-broadcaster
+          image: <your-registry>/kubernetes-pod-broadcaster:latest
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            # The ID for the 'deno' user in the image.
+            runAsUser: 1000 
+          # Run the 'cluster' task, it passes the cluster CA certificate to Deno.
+          command: ["/bin/sh", "-c"]
+          args: ["deno task cluster"]
+          env:
+            - name: NAMESPACE
+              value: your-namespace
+            - name: LABEL_SELECTOR
+              value: app=your-app
+            - name: DEBUG
+              value: "true"

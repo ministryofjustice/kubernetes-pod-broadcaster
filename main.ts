@@ -53,8 +53,37 @@ export async function fetchPods(): Promise<string[]> {
   }
 
   const data = await res.json();
-  podCache = data.items.map((pod: any) => pod.status.podIP).filter(Boolean);
-  debugLog("Fetched pods", podCache);
+
+  const items = Array.isArray(data.items) ? data.items : [];
+  debugLog("Fetched pod items", { count: items.length });
+
+  const readyPods = items.filter((pod: any) => {
+    if (pod?.status?.phase !== "Running") {
+      debugLog("Skipping pod (not running)", { name: pod?.metadata?.name });
+      return false;
+    }
+
+    const readyCondition = (pod?.status?.conditions ?? []).find(
+      (condition: any) => condition?.type === "Ready",
+    );
+
+    const isReady = readyCondition?.status === "True" && Boolean(pod?.status?.podIP);
+
+    if (!isReady) {
+      debugLog("Skipping pod (not ready or missing IP)", {
+        name: pod?.metadata?.name,
+        readyStatus: readyCondition?.status,
+        podIP: pod?.status?.podIP,
+      });
+    }
+
+    return isReady;
+  });
+
+  podCache = readyPods.map((pod: any) => pod.status.podIP);
+
+  debugLog("Ready pod IPs", podCache);
+
   lastFetchTime = now;
   return podCache;
 }

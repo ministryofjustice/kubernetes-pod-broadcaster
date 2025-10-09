@@ -43,8 +43,20 @@ globalThis.fetch = async (
 
     const mockData = {
       items: [
-        { status: { podIP: "10.0.0.1" } },
-        { status: { podIP: "10.0.0.2" } },
+        {
+          status: {
+            podIP: "10.0.0.1",
+            phase: "Running",
+            conditions: [{ type: "Ready", status: "True" }],
+          },
+        },
+        {
+          status: {
+            podIP: "10.0.0.2",
+            phase: "Running",
+            conditions: [{ type: "Ready", status: "True" }],
+          },
+        },
       ],
     };
 

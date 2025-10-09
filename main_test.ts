@@ -78,7 +78,6 @@ Deno.test.afterEach(() => {
   broadcastedRequests = [];
 });
 
-
 /**
  * Test fetchPods
  */
@@ -125,7 +124,6 @@ Deno.test("fetchPods refreshes cache after duration", async () => {
   assertEquals(pods, ["10.0.0.1", "10.0.0.2"]);
 });
 
-
 /**
  * Test broadcastRequest
  */
@@ -160,7 +158,6 @@ Deno.test("broadcastRequest handles fetch errors gracefully", async () => {
   assertEquals(results[0].status, null);
   assertEquals(typeof results[0].error, "string");
 });
-
 
 /**
  * Test server handler
@@ -207,6 +204,32 @@ Deno.test(
     assertEquals(broadcastedRequests, [
       { url: "http://10.0.0.1:8080/test?example=1", method: "DELETE" },
       { url: "http://10.0.0.2:8080/test?example=1", method: "DELETE" },
+    ]);
+  },
+);
+
+Deno.test(
+  "serverHandler responds to /broadcast/purge-cache/ requests",
+  async () => {
+    const request = new Request(
+      `http://localhost:${port}/broadcast/purge-cache/?_wait=true`,
+      {
+        method: "GET",
+      },
+    );
+    const response = await serverHandler(request);
+    assertEquals(response.status, 200);
+    const text = await response.text();
+    assertEquals(text, "Broadcast complete");
+    assertEquals(broadcastedRequests, [
+      {
+        url: "http://10.0.0.1:8080/purge-cache/",
+        method: "GET",
+      },
+      {
+        url: "http://10.0.0.2:8080/purge-cache/",
+        method: "GET",
+      },
     ]);
   },
 );

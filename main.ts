@@ -115,8 +115,6 @@ export async function broadcastRequest(
   );
 }
 
-const BROADCAST_ROUTE = new URLPattern({ pathname: "/broadcast/:targetPath*" });
-
 /**
  * Handle incoming requests.
  * @param req Incoming request
@@ -131,9 +129,8 @@ export const serverHandler = async (req: Request): Promise<Response> => {
     headers: Object.fromEntries(req.headers.entries()),
   });
 
-  const match = BROADCAST_ROUTE.exec(url);
-
-  if (!match) {
+  if (!url.pathname.startsWith("/broadcast")) {
+    console.log(`No match for ${url.pathname}`);
     return new Response("Not Found", { status: 404 });
   }
 
@@ -149,7 +146,7 @@ export const serverHandler = async (req: Request): Promise<Response> => {
     port: parseInt(_port) || 8080,
     method: req.method,
     search: new URLSearchParams(searchObject).toString(),
-    pathname: match.pathname.groups.targetPath as string,
+    pathname: url.pathname.replace(/^\/broadcast/, ""),
   });
 
   if (_wait === "true") {

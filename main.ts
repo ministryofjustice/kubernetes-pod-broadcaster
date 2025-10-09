@@ -120,7 +120,12 @@ export async function broadcastRequest(
     options,
   });
 
-  return Promise.all(
+  // Create a custom HTTP client that allows the host header to be set.
+  const client = Deno.createHttpClient({
+    allowHost: true,
+  });
+
+  const returnValue = await Promise.all(
     podIPs.map(async (ip) => {
       try {
         const url = new URL(`http://${ip}`);
@@ -139,6 +144,7 @@ export async function broadcastRequest(
         const response = await fetch(url, {
           method: options.method,
           headers: options.headers,
+          client,
         });
 
         console.log(`Broadcast to ${url.toString()}: ${response.status}`);
@@ -166,6 +172,10 @@ export async function broadcastRequest(
       }
     }),
   );
+
+  client.close();
+
+  return returnValue;
 }
 
 /**

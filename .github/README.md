@@ -2,7 +2,8 @@
 
 # <img alt="MoJ logo" src="https://moj-logos.s3.eu-west-2.amazonaws.com/moj-uk-logo.png" width="200"><br>Kubernetes Pod Broadcaster
 
-[![Scanner](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/scan.yml/badge.svg)](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/scan.yml)
+[![Snyk](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/snyk.yml/badge.svg)](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/snyk.yml)
+[![Test](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/test.yml/badge.svg)](https://github.com/ministryofjustice/kubernetes-pod-broadcaster/actions/workflows/test.yml)
 <br>
 [![Standards Icon]][Standards Link]
 [![License Icon]][License Link]

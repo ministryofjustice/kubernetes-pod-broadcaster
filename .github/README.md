@@ -17,12 +17,45 @@ This way, an application can make a single request to clear nginx's cache, which
 
 </div>
 
-<br>
+## How it works
+
+A high level overview of how this works is shown below:
+
+```mermaid
+flowchart TD
+    A[Client Request] --> B[Pod Broadcaster Service]
+    B --> C[Query Kubernetes API]
+    C --> D[Get Pods by Label Selector]
+    D --> E{Check wait parameter}
+    E -->|wait=false| F[Broadcast Request to All Pods]
+    E -->|wait=true| G[Broadcast Request to All Pods]
+    F --> H[Pod 1]
+    F --> I[Pod 2]
+    F --> J[Pod N...]
+    G --> K[Pod 1]
+    G --> L[Pod 2]
+    G --> M[Pod N...]
+    F --> N["Return 'Broadcast started' (202)"]
+    K --> O[Wait for responses]
+    L --> O
+    M --> O
+    O --> P["Return 'Broadcast complete' (200)"]
+    N --> Q[Client receives immediate confirmation]
+    P --> R[Client receives completion confirmation]
+```
+
+For further understanding, refer to [main.ts](./main.ts).
+
+To read the functions in a logical order:
+
+1. serverHandler - handles incoming requests.
+1. fetchPods - fetches pods from the Kubernetes API.
+1. broadcastRequest - broadcasts the request to the pods.
 
 **Used by:**
 
+- [intranet.justice.gov.uk](https://intranet.justice.gov.uk/)
 - [www.justice.gov.uk](https://www.justice.gov.uk/) (TBC)
-- [intranet.justice.gov.uk](https://intranet.justice.gov.uk/) (TBC)
 
 ## Local development
 
@@ -53,6 +86,24 @@ The following environment variables can be set to configure the application:
 | CACHE_DURATION_MS | The duration to cache the list of pods for, in milliseconds. | 1000 (1 second) |
 | DEBUG             | Enable debug logging.                                        | false           |
 | ALLOWED_HEADERS   | Comma-separated list of headers to forward to pods.          | (none)          |
+
+### Request parameters
+
+The following query parameters can be included in the request to modify its behaviour:
+
+| Parameter | Description                                                                              | Default                                                        |
+| --------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| \_wait    | If `true`, the server will wait for all pods to respond before responding with a 200 OK. | "false" - the server responds immediately with a 202 Accepted. |
+| \_port    | The port on the target pods.                                                             | 8080                                                           |
+
+### Request headers
+
+By default, the `host` header is forwarded to the target pods. To forward other specific headers, set the `ALLOWED_HEADERS` environment variable to a comma-separated list of header names.
+For example, to forward the `Authorization` and `X-Custom-Header` headers, set:
+
+```bash 
+ALLOWED_HEADERS="Authorization,X-Custom-Header"
+```
 
 ### Using this in a cluster
 

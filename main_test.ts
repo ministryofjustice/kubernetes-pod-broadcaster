@@ -33,8 +33,9 @@ globalThis.fetch = async (
   // Mock response for fetchPods tests.
   if (url.includes("/api/v1/namespaces/default/pods")) {
     // Check for Authorization header
-    const headers =
-      input instanceof Request ? input.headers : new Headers(init?.headers);
+    const headers = input instanceof Request
+      ? input.headers
+      : new Headers(init?.headers);
 
     const auth = headers?.get("Authorization") ?? headers?.get("authorization");
 
@@ -296,4 +297,14 @@ Deno.test("serverHandler forwards allowed headers", async () => {
       headers: { host: "upstream.test:1234" },
     },
   ]);
+});
+
+Deno.test("serverHandler responds to liveness check", async () => {
+  const request = new Request(`http://localhost:${port}/liveness`, {
+    method: "GET",
+  });
+  const response = await serverHandler(request);
+  assertEquals(response.status, 200);
+  const text = await response.text();
+  assertEquals(text, "OK");
 });

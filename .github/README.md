@@ -69,9 +69,9 @@ To make changes to the application locally:
 
 From the container's terminal, you can now run Deno commands:
 
-`deno test --watch`
+`deno run test --watch`
 
-`deno dev --watch`
+`deno run dev --watch`
 
 ### Environment labels
 

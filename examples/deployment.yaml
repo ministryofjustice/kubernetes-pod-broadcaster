@@ -19,6 +19,9 @@ spec:
       containers:
         - name: pod-broadcaster
           image: <your-registry>/kubernetes-pod-broadcaster:latest
+          ports:
+            - name: http
+              containerPort: 1993
           resources:
             limits:
               cpu: 100m
@@ -39,3 +42,7 @@ spec:
               value: app=your-app
             - name: DEBUG
               value: "true"
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: http

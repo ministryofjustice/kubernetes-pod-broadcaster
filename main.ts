@@ -76,8 +76,8 @@ export async function fetchPods(): Promise<string[]> {
       (condition: any) => condition?.type === "Ready",
     );
 
-    const isReady =
-      readyCondition?.status === "True" && Boolean(pod?.status?.podIP);
+    const isReady = readyCondition?.status === "True" &&
+      Boolean(pod?.status?.podIP);
 
     if (!isReady) {
       debugLog("Skipping pod (not ready or missing IP)", {
@@ -178,19 +178,14 @@ export async function broadcastRequest(
   return returnValue;
 }
 
+
 /**
- * Handle incoming requests.
+ * Handle /broadcast requests.
  * @param req Incoming request
  * @returns Response
  */
-export const serverHandler = async (req: Request): Promise<Response> => {
+const handleBroadcastRequest = async (req: Request): Promise<Response> => {
   const url: URL = new URL(req.url);
-
-  debugLog("Full request details", {
-    method: req.method,
-    url: url.toString(),
-    headers: Object.fromEntries(req.headers.entries()),
-  });
 
   const forwardedHeaders = new Headers();
   for (const [name, value] of req.headers.entries()) {
@@ -203,11 +198,6 @@ export const serverHandler = async (req: Request): Promise<Response> => {
     "Forwarding headers",
     Object.fromEntries(forwardedHeaders.entries()),
   );
-
-  if (!url.pathname.startsWith("/broadcast")) {
-    console.log(`No match for ${url.pathname}`);
-    return new Response("Not Found", { status: 404 });
-  }
 
   const { _port, _wait, ...searchObject } = Object.fromEntries(
     url.searchParams,
@@ -229,9 +219,37 @@ export const serverHandler = async (req: Request): Promise<Response> => {
   }
 
   broadcastPromise.catch((err) =>
-    console.error("Broadcast error (async):", err),
+    console.error("Broadcast error (async):", err)
   );
+
+  console.info(`[info] Broadcast started: ${url}`);
   return new Response("Broadcast started", { status: 202 });
+};
+
+/**
+ * Handle incoming requests.
+ * @param req Incoming request
+ * @returns Response
+ */
+export const serverHandler = async (req: Request): Promise<Response> => {
+  const url: URL = new URL(req.url);
+
+  if (url.pathname.startsWith("/liveness")) {
+    return new Response("OK", { status: 200 });
+  }
+
+  debugLog("Full request details", {
+    method: req.method,
+    url: url.toString(),
+    headers: Object.fromEntries(req.headers.entries()),
+  });
+
+  if (url.pathname.startsWith("/broadcast")) {
+    return await handleBroadcastRequest(req);
+  }
+
+  console.log(`No match for ${url.pathname}`);
+  return new Response("Not Found", { status: 404 });
 };
 
 if (import.meta.main) {

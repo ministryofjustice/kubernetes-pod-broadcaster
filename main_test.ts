@@ -299,8 +299,8 @@ Deno.test("serverHandler forwards allowed headers", async () => {
   ]);
 });
 
-Deno.test("serverHandler responds to liveness check", async () => {
-  const request = new Request(`http://localhost:${port}/liveness`, {
+Deno.test("serverHandler responds to healthz check", async () => {
+  const request = new Request(`http://localhost:${port}/healthz`, {
     method: "GET",
   });
   const response = await serverHandler(request);

@@ -234,7 +234,7 @@ const handleBroadcastRequest = async (req: Request): Promise<Response> => {
 export const serverHandler = async (req: Request): Promise<Response> => {
   const url: URL = new URL(req.url);
 
-  if (url.pathname.startsWith("/liveness")) {
+  if (url.pathname.startsWith("/healthz")) {
     return new Response("OK", { status: 200 });
   }
 

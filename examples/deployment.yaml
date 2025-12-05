@@ -44,5 +44,9 @@ spec:
               value: "true"
           livenessProbe:
             httpGet:
-              path: /liveness
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
               port: http

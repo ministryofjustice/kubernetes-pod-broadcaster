@@ -18,17 +18,10 @@ jobs:
     name: "Deno: test"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v2.x
-      - name: Cache Deno modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/deno
-          key: ${{ runner.os }}-deno-${{ hashFiles('**/*.ts') }}-v2
-          restore-keys: |
-            ${{ runner.os }}-deno-v2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build container image
+        run: docker image build  -t kubernetes-pod-broadcaster:test .
+
       - name: Run tests
-        run: deno task test
+        run: docker run --rm kubernetes-pod-broadcaster:test sh -c "deno run test"

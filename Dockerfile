@@ -5,11 +5,16 @@ EXPOSE 1993
 
 WORKDIR /app
 
+# Upgrade vulnerable Alpine packages shipped in the base image.
+# Fixes vuln. in zlib <1.3.2-r0
+# See: https://security.snyk.io/vuln/SNYK-ALPINE323-ZLIB-15435529
+RUN apk add --no-cache --upgrade zlib apk-tools libapk
+
 # Prefer not to run as root.
 USER deno
 
 # Copy the source files.
-COPY ./deno* ./main* ./
+COPY --chown=deno:deno ./deno* ./main* ./
 
 # Compile the main app so that it doesn't need to be compiled each startup/entry.
 RUN deno cache main.ts
